@@ -1,0 +1,55 @@
+version: '3.5'
+
+services:
+  backend_yandex:
+    depends_on:
+      - backend_database_yandex
+    restart: always
+    container_name: backend
+    build:
+      context: .
+      target: backend
+    command: "/usr/local/bin/python3 manage.py runserver 0.0.0.0:80"
+    environment:
+      - DB_NAME=django_yandex
+      - DB_USER=django_yandex_admin
+      - DB_PASSWORD=qkvL^kj7{^
+      - DB_HOST=backend_database_yandex
+      - DB_HOST_PORT=5432
+
+      - DEBUG=True
+      - SECRET_KEY=2^mw&nzqi(a%6p+jdpfgg1@m5krj+v&11su^54px82###d)+iy
+      - STRIPE_API_KEY=sk_test_51Li2fdEvw9v6ijkWL3jk5IQnNEUbyTw45ss7SeoZ3dHrhjIbWH1ektkgApQDD9rm4Pt4u7f8aSvAtTg89z4pfRjc00HmBkfdYW
+
+    volumes:
+      - backend_static:/code/backend/static
+      - backend_media:/code/media
+      - backend_logs:/code/logs
+    ports:
+      - "80:80"
+    networks:
+      backend:
+
+
+  backend_database_yandex:
+    restart: always
+    image: postgres:13-alpine
+    container_name: backend_database_yandex
+    shm_size: 1g
+    environment:
+      - POSTGRES_DB=django_yandex
+      - POSTGRES_USER=django_yandex_admin
+      - POSTGRES_PASSWORD=qkvL^kj7{^
+    volumes:
+      - backend_db:/var/lib/postgresql/data
+    networks:
+      backend:
+
+volumes:
+  backend_static:
+  backend_media:
+  backend_logs:
+  backend_db:
+
+networks:
+  backend:
