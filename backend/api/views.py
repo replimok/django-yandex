@@ -1,9 +1,10 @@
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from datetime import timedelta
 
 from .models import SystemItem
-from .serializers import DateSerializer, SystemItemImportRequest, SystemItemImport
+from .serializers import DateSerializer, SystemItemImportRequest, SystemItemImport, SystemItemHistoryResponse
 
 
 class DeleteView(GenericAPIView):
@@ -17,6 +18,23 @@ class DeleteView(GenericAPIView):
         obj = get_object_or_404(query, id=item_id)
         obj.delete()
         return Response(status=200)
+
+
+class UpdatesView(GenericAPIView):
+    queryset = SystemItem.objects.filter(type='FILE')
+
+    def get_queryset_date(self, date):
+        query = self.get_queryset()
+        query.filter(date__gte=date - timedelta(days=1)).filter(date__lte=date)
+        return query
+
+    def get(self, request):
+        serializer = DateSerializer(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+        date = serializer.validated_data['date']
+        query = self.get_queryset_date(date)
+        result = SystemItemHistoryResponse({'items':query}).data
+        return Response(result, status=200)
 
 
 class ImportsView(GenericAPIView):
